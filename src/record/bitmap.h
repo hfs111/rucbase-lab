@@ -37,6 +37,7 @@ class Bitmap {
         return max_n;
     }
 
+	static bool test(char *bm, int pos) { return (bm[get_bucket(pos)] & get_bit(pos)) != 0; }
     // 找第一个为0 or 1的位
     static int first_bit(bool bit, const char *bm, int max_n) { return next_bit(bit, bm, max_n, -1); }
 
