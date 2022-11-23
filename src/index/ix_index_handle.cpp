@@ -81,10 +81,11 @@ bool IxIndexHandle::insert_entry(const char *key, const Rid &value, Transaction 
 	std::scoped_lock lock{root_latch_};//set lock
 
 	IxNodeHandle *leaf = FindLeafPage(key, Operation::INSERT, transaction);
-	buffer_pool_manager_->UnpinPage(leaf->GetPageId(), false);    
-	int cur_size = leaf->GetSize(); //current size
-	if(leaf->Insert(key,value)== cur_size)// can not insert
+	int cur_size = leaf->GetSize(); //current size	    
+	if(leaf->Insert(key,value)== cur_size){// can not insert
+		buffer_pool_manager_->UnpinPage(leaf->GetPageId(), false);	
 		return false;
+	}
 	else if(leaf->GetSize() == leaf->GetMaxSize()){ // leaf is full
 		IxNodeHandle* new_node = Split(leaf); //split
 		if(leaf->GetPageNo() == file_hdr_.last_leaf)
@@ -92,6 +93,7 @@ bool IxIndexHandle::insert_entry(const char *key, const Rid &value, Transaction 
 		InsertIntoParent(leaf, new_node->get_key(0), new_node, transaction);
 		buffer_pool_manager_->UnpinPage(new_node->GetPageId(), true);//unpin
 	}
+	buffer_pool_manager_->UnpinPage(leaf->GetPageId(), false);
 	return true;
 }
 
@@ -203,12 +205,15 @@ bool IxIndexHandle::delete_entry(const char *key, Transaction *transaction) {
     // 4. 如果需要并发，并且需要删除叶子结点，则需要在事务的delete_page_set中添加删除结点的对应页面；记得处理并发的上锁
 	std::scoped_lock lock{root_latch_};
 	IxNodeHandle *leaf = FindLeafPage(key, Operation::DELETE, transaction);
-    buffer_pool_manager_->UnpinPage(leaf->GetPageId(), false);
+    
 	int size = leaf->GetSize();
-	if(leaf->Remove(key) == size)// cannot remove
+	if(leaf->Remove(key) == size){// cannot remove
+		buffer_pool_manager_->UnpinPage(leaf->GetPageId(), false);	
 		return false;
+	}
 	else{
 		CoalesceOrRedistribute(leaf);
+		buffer_pool_manager_->UnpinPage(leaf->GetPageId(), true);
 		return true;
 	}
 }
@@ -251,14 +256,16 @@ bool IxIndexHandle::CoalesceOrRedistribute(IxNodeHandle *node, Transaction *tran
 		brother_node = FetchNode(node->GetNextLeaf());
 	}
 	//unpin page
-	buffer_pool_manager_->UnpinPage(parent_node->GetPageId(), true);
-    buffer_pool_manager_->UnpinPage(brother_node->GetPageId(), true);
 	if(node->GetSize() + brother_node->GetSize() >= node->GetMinSize() * 2){
 		Redistribute(brother_node, node, parent_node, pos);
+		buffer_pool_manager_->UnpinPage(parent_node->GetPageId(), true);
+    	buffer_pool_manager_->UnpinPage(brother_node->GetPageId(), true);
 		return false;
 	}
 	else{
 	    Coalesce(&brother_node, &node, &parent_node, pos, transaction);
+		buffer_pool_manager_->UnpinPage(parent_node->GetPageId(), true);
+    	buffer_pool_manager_->UnpinPage(brother_node->GetPageId(), true);
         return true;
 	}
 }
@@ -349,7 +356,7 @@ bool IxIndexHandle::Coalesce(IxNodeHandle **neighbor_node, IxNodeHandle **node, 
     // 2. 把node结点的键值对移动到neighbor_node中，并更新node结点孩子结点的父节点信息（调用maintain_child函数）
     // 3. 释放和删除node结点，并删除parent中node结点的信息，返回parent是否需要被删除
     // 提示：如果是叶子结点且为最右叶子结点，需要更新file_hdr_.last_leaf
-	if(index != 0){
+	if(index == 0){
 		std::swap(*neighbor_node, *node); //use std::swap
 		index+=1;
 	}
