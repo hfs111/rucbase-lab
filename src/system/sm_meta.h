@@ -41,7 +41,12 @@ struct TabMeta {
      */
     bool is_col(const std::string &col_name) const {
         // lab3 task1 Todo
-        return false;
+		std::vector<ColMeta>::const_iterator it;
+		for(it = cols.begin();it!=cols.end();++it){
+			if((*it).name == col_name)
+				return true;
+		}
+        return false; //not found
         // lab3 task1 Todo End
     }
     /**
@@ -53,7 +58,12 @@ struct TabMeta {
     std::vector<ColMeta>::iterator get_col(const std::string &col_name) {
         // lab3 task1 Todo
         std::vector<ColMeta>::iterator it;
-        return it;
+		for(it = cols.begin();it != cols.end(); ++it)
+		{
+			if((*it).name == col_name)
+				return it;
+		}
+        throw ColumnNotFoundError(col_name); //not found
         // lab3 task1 Todo End
     }
 
@@ -86,6 +96,7 @@ class DbMeta {
     std::map<std::string, TabMeta> tabs_;  // 数据库内的表名称和元数据的映射
 
    public:
+    // DbMeta(std::string name) : name_(name) {}
 
     bool is_table(const std::string &tab_name) const { return tabs_.find(tab_name) != tabs_.end(); }
 
