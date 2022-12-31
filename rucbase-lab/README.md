@@ -1,3 +1,6 @@
+#### 来源于中国人民大学《数据库系统实现》荣誉课程（2022秋），在此更新并填充代码。
+
+
 # RucBase
 ```
  ____  _   _  ____ ____    _    ____  _____ 
@@ -40,12 +43,13 @@ Rucbase是一个精简的RDBMS原型系统，用于《数据库系统实现》�
 - [Rucbase使用文档](docs/Rucbase使用文档.md)
 - [Rucbase项目结构](docs/Rucbase项目结构.md)
 
-### 学生实验文档(2022-9-18日更新)
+### 学生实验文档(2022-10-26日更新)
 
 > 请使用命令git pull来拉取最新的实验文档
 
 - [Rucbase学生实验操作说明示例](docs/Rucbase学生实验操作说明示例.md)
 - [Rucbase-Lab1存储管理实验文档](docs/Rucbase-Lab1[存储管理实验文档].md)
+- [Rucbase-Lab2索引管理实验文档](docs/Rucbase-Lab2[索引管理实验文档].md)
 
 ### 时间安排和工作量估计
 

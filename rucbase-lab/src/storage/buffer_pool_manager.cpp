@@ -160,7 +160,7 @@ Page *BufferPoolManager::NewPage(PageId *page_id) {
     	return nullptr;
     }
 
-	page_id->page_no = disk_manager_->AllocatePage(page_id->fd) - 1;
+	page_id->page_no = disk_manager_->AllocatePage(page_id->fd);
 	Page *page = &pages_[frame_id];
 	UpdatePage(page, *page_id, frame_id);
 	replacer_->Pin(frame_id);

@@ -31,7 +31,7 @@ struct ColMeta {
 struct TabMeta {
     std::string name;
     std::vector<ColMeta> cols;
-
+    bool delete_mark_{false};
     /**
      * @brief 根据列名在本表元数据结构体中查找是否有该名字的列
      *
@@ -41,6 +41,10 @@ struct TabMeta {
      */
     bool is_col(const std::string &col_name) const {
         // lab3 task1 Todo
+        int table_size = cols.size();
+        for(int i = 0; i < table_size; ++i)
+            if(cols[i].name == col_name)
+                return true;
         return false;
         // lab3 task1 Todo End
     }
@@ -53,7 +57,10 @@ struct TabMeta {
     std::vector<ColMeta>::iterator get_col(const std::string &col_name) {
         // lab3 task1 Todo
         std::vector<ColMeta>::iterator it;
-        return it;
+        for(it = cols.begin(); it != cols.end(); ++it)
+            if(it->name == col_name)
+                return it;
+        throw ColumnNotFoundError(col_name);
         // lab3 task1 Todo End
     }
 
@@ -86,6 +93,7 @@ class DbMeta {
     std::map<std::string, TabMeta> tabs_;  // 数据库内的表名称和元数据的映射
 
    public:
+    // DbMeta(std::string name) : name_(name) {}
 
     bool is_table(const std::string &tab_name) const { return tabs_.find(tab_name) != tabs_.end(); }
 
