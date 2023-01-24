@@ -222,3 +222,49 @@ void SmManager::drop_index(const std::string &tab_name, const std::string &col_n
     ihs_.erase(index_name);
     col->index = false;
 }
+//*****************************
+//三种回滚操作，即恢复初始状态，lab4补充
+//*****************************
+
+//insert -> delete
+void SmManager::rollback_insert(const std::string &tab_name, const Rid &rid, Context *context) {
+    auto tab = db_.get_table(tab_name);
+    auto rec = fhs_.at(tab_name).get()->get_record(rid, context);
+    // delete entry
+    for (size_t i=0; i<tab.cols.size(); i++){
+        if (tab.cols[i].index)
+            ihs_.at(get_ix_manager()->get_index_name(tab_name, i)).get()->delete_entry(rec->data+tab.cols[i].offset, nullptr);
+    }
+    // delete record
+    fhs_.at(tab_name).get()->delete_record(rid, context);
+}
+
+//delete -> insert
+void SmManager::rollback_delete(const std::string &tab_name, const RmRecord &record, Context *context) {
+    auto tab = db_.get_table(tab_name);
+    // insert record
+    auto rid = fhs_.at(tab_name).get()->insert_record(record.data, context);
+    // insert entry
+    for (size_t i=0; i<tab.cols.size(); i++){
+        if (tab.cols[i].index)
+            ihs_.at(get_ix_manager()->get_index_name(tab_name, i)).get()->insert_entry(record.data+tab.cols[i].offset, rid, context->txn_);
+    }
+}
+
+//update -> update back (delete then insert)
+void SmManager::rollback_update(const std::string &tab_name, const Rid &rid, const RmRecord &record, Context *context) {
+    auto tab = db_.get_table(tab_name);
+    auto rec = fhs_.at(tab_name).get()->get_record(rid, context);
+    // delete entry
+    for (size_t i=0; i<tab.cols.size(); i++){
+        if (tab.cols[i].index)
+            ihs_.at(get_ix_manager()->get_index_name(tab_name, i)).get()->delete_entry(rec->data+tab.cols[i].offset, nullptr);
+    }
+    // update record
+    fhs_.at(tab_name).get()->update_record(rid, record.data, context);
+    // insert entry
+    for (size_t i=0; i<tab.cols.size(); i++){
+        if (tab.cols[i].index)
+            ihs_.at(get_ix_manager()->get_index_name(tab_name, i)).get()->insert_entry(record.data+tab.cols[i].offset, rid, context->txn_);
+    }
+}

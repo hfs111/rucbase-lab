@@ -48,7 +48,9 @@ class InsertExecutor : public AbstractExecutor {
 		}
 		//Insert into record file
 		rid_ = fh_->insert_record(rec.data, context_);
-		//Insert into index'
+		WriteRecord *write_record = new WriteRecord(WType::INSERT_TUPLE, tab_name_, rid_);
+        context_->txn_->AppendWriteRecord(write_record);
+        //Insert into index'
 		for(size_t i = 0; i< tab_.cols.size();i++){
 			auto &col = tab_.cols[i];
 			if (col.index) {

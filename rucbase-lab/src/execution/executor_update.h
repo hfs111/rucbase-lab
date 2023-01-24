@@ -60,7 +60,8 @@ class UpdateExecutor : public AbstractExecutor {
             // record a update operation into the transaction
             RmRecord update_record{rec->size};
             memcpy(update_record.data, rec->data, rec->size);
-
+            WriteRecord* write_record = new WriteRecord(WType::UPDATE_TUPLE, tab_name_, rid, update_record);
+            context_->txn_->AppendWriteRecord(write_record);
             // lab3 task3 Todo
             // Update record in record file
             // lab3 task3 Todo end

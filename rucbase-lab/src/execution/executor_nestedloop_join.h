@@ -111,5 +111,38 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
         right_->feed(feed_dict);
     }
 
+//    ******************
+//      构建左子延展算法
+//    ******************
+//make scanExecutor for table A,B,C
+//make loopjoinExecutor L1  with B,C 
+//    L1
+//   /  \
+//  B    C
+//make loopjoinExecutor L2  with A,L1
+//          L2
+//         /  \
+//        A    L1
+//           /    \
+//          B       C
+//make projExecutor P with L2
+//          P
+//          |
+//          L2
+//         /  \
+//        A    L1
+//           /    \
+//          B       C
+
+    void feed_left() {
+        //使用右子算子结合生成map
+        auto right_dict = rec2dict(right_->cols(), right_->Next().get());
+        auto feed_dict = prev_feed_dict_;
+        //右子算子的kv对加入dict中
+        feed_dict.insert(right_dict.begin(), right_dict.end());
+        //左子算子调用feed
+        left_->feed(feed_dict);
+    }
+
     Rid &rid() override { return _abstract_rid; }
 };

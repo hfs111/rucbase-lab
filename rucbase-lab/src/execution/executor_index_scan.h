@@ -71,14 +71,14 @@ class IndexScanExecutor : public AbstractExecutor {
                     upper = ih->upper_bound(rhs_key);
                 }
                 // lab3 task2 todo
-				else if(cond.op == OP_GT){
-                    lower = ih->upper_bound(rhs_key);
-                }else if(cond.op == OP_LT){
-                	upper = ih->lower_bound(rhs_key);
+				else if(cond.op == OP_LT){
+                    upper = ih->upper_bound(rhs_key);
+                }else if(cond.op == OP_GT){
+                	lower = ih->lower_bound(rhs_key);
                 }else if(cond.op == OP_LE){
-                	upper = ih->upper_bound(rhs_key);
+                	lower = ih->upper_bound(rhs_key);
                 }else if(cond.op == OP_GE){
-                	lower = ih->lower_bound(rhs_key); 
+                	upper = ih->lower_bound(rhs_key); 
                 }
                 else{
                  	throw InternalError("Unexpected op type");
